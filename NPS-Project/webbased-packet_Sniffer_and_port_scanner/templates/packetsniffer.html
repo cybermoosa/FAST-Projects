@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Packet Sniffer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-image: url("{{ url_for('static', filename='cover2.avif') }}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        h1 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 40px;
+        }
+        .button-cap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-cap button {
+            padding: 15px 30px;
+            border: none;
+            background-color: black;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+            margin: 0 10px;
+        }
+        .button-cap button:hover {
+            background-color: red;
+        }
+        .packet-summaries {
+            margin-top: 20px;
+            color: white;
+            max-width: 800px;
+            text-align: left;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        .dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        .dialog h2 {
+            margin-top: 0;
+        }
+        .dialog button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            background-color: black;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .dialog button:hover {
+            background-color: red;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <section class="header">
+        <h1>Packet Sniffer</h1>
+        <div class="button-cap">
+            <button id="start-btn" onclick="startCapture()">Start</button>
+            <button id="stop-btn" onclick="stopCapture()" disabled>Stop</button>
+        </div>
+        <div class="packet-summaries" id="packet-summaries">
+            <!-- Packet summaries will be displayed here -->
+        </div>
+    </section>
+    <div class="overlay" id="overlay"></div>
+    <div class="dialog" id="dialog">
+        <h2>Packet Details</h2>
+        <p id="packet-details"></p>
+        <button onclick="closeDialog()">Close</button>
+    </div>
+    <script>
+        function startCapture() {
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('stop-btn').disabled = false;
+            fetch('/start_capture')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'started') {
+                        console.log('Capture started');
+                    }
+                });
+        }
+
+        function stopCapture() {
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('stop-btn').disabled = true;
+            fetch('/stop_capture')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'stopped') {
+                        console.log('Capture stopped');
+                    }
+                });
+        }
+
+        function fetchPackets() {
+            fetch('/get_packets')
+                .then(response => response.json())
+                .then(data => {
+                    const packetSummaries = document.getElementById('packet-summaries');
+                    packetSummaries.innerHTML = '';
+                    data.packets.forEach((packet, index) => {
+                        const packetDiv = document.createElement('div');
+                        packetDiv.textContent = packet;
+                        packetDiv.style.cursor = 'pointer';
+                        packetDiv.onclick = () => showPacketDetails(index);
+                        packetSummaries.appendChild(packetDiv);
+                    });
+                });
+        }
+
+        function showPacketDetails(packetIndex) {
+            fetch(`/get_packet_details?index=${packetIndex}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('packet-details').textContent = data.details;
+                    document.getElementById('overlay').style.display = 'block';
+                    document.getElementById('dialog').style.display = 'block';
+                });
+        }
+
+        function closeDialog() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('dialog').style.display = 'none';
+        }
+
+        setInterval(fetchPackets, 1000); // Fetch packets every second
+    </script>
+</body>
+</html>
