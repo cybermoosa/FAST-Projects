@@ -1,0 +1,4 @@
+﻿  oop lab project.cpp
+D:\SEMESTER 2-BCY-2A\oop lab project\oop lab project\oop lab project.cpp(286,9): warning C4101: 's': unreferenced local variable
+D:\SEMESTER 2-BCY-2A\oop lab project\oop lab project\oop lab project.cpp(287,9): warning C4101: 'r': unreferenced local variable
+  oop lab project.vcxproj -> D:\SEMESTER 2-BCY-2A\oop lab project\Debug\oop lab project.exe
